@@ -1,163 +1,156 @@
 from tkinter import *
 
-class CALCULATOR(Tk) :
-    eq =''
+class CALCULATOR(Tk):
+    eq = ''
     result = ''
 
-    def __init__(self , w = 484 , h = 543 ,bg = 'grey'):
-        
-        self.w = w 
+    def __init__(self, w=484, h=543, bg='grey'):
+        self.w = w
         self.h = h
-        self.bg= bg
+        self.bg = bg
         super().__init__()
 
-        for i in [0,1,2,3,4,5,6,7,8,9,'.',"+",'-','*','/','x','÷','X'] :
-            self.bind(str(i) , self.Enter)
-
-        self.bind('<Delete>',self.DEL)
-        self.bind("<Return>",self.ANS)
-        self.bind("<=>",self.calc)
-        self.bind("<BackSpace>",self.clear)
-
         self.geometry(f"{self.w}x{self.h}")
-        self.config(background = self.bg)
+        self.config(background=self.bg)
         self.title("CALCULATOR BY SAQIB SHAIKH")
-        #self.resizable(False,False)
-    
-    def getDisplay(self , color2= 'grey19' , color1 = 'grey16' , fg = 'white') :   
-        self.lb1 = Label(self , bg = color1 , fg = fg , font = 'verdana 16')
-        self.lb1.place(x = 3 , y = 6  , width = self.w-6 , height = 30) 
 
-        self.lb2 = Label(self , bg = color2 , fg = fg , font = 'comicsans 35 bold' )
-        self.lb2.place(x = 3 , y = 38 , width = self.w-6 , height = 65)
+        # Bindings for key presses
+        self.bind_keys()
 
-    def getButtons(self , color = 'orange1') :
+    def bind_keys(self):
+        for i in [str(x) for x in range(10)] + ['.', '+', '-', '*', '/', 'x', '÷']:
+            self.bind(i, self.enter)
 
-        A = 'ANS'
-        C = 'CE / ←'
-        l = 110
+        self.bind('<Delete>', self.clear_all)
+        self.bind("<Return>", self.calculate)
+        self.bind("<BackSpace>", self.backspace)
 
-        bt = [['C','CE / ←','∛','√'],['X³','X²','÷','%'],['7','8','9','-'],['4','5','6','+'],['1','2','3','x'],['.','0',A,'=']]    
-        
-        for i in bt :
-            k = 3
-            for j in i :
-                b = Button(self , text = j  , font = 'Vardana 22 bold' , activebackground = 'grey27' , bg = color , relief = RIDGE)
-                b.place(x = k   , width = 118 , height = 70 , y = l)
+    def create_display(self, color1='grey16', color2='grey15', fg='white'):
+        self.lb1 = Label(self, bg=color1, fg=fg, font='verdana 16', anchor=E)
+        self.lb1.place(x=3, y=6, width=self.w-6, height=30)
 
-                if j not in ['=' , A , C , 'C' , '√' , '∛' , 'X³','X²'] :
-                    b.bind('<Button-1>' , self.show)
-                elif j == '=' : 
-                    b.bind('<Button-1>' , self.calc)
-                elif j == A :
-                    b.bind('<Button-1>' , self.ANS)
-                elif j == 'C' :
-                    b.bind("<Button-1>" , self.DEL)
-                elif j == C : 
-                    b.bind("<Button-1>" , self.clear)
-                elif j == '√' :
-                    b.bind("<Button-1>" , self.square_root)
-                elif j == '∛' :
-                    b.bind("<Button-1>" , self.cube_root)
-                elif j == 'X²' :
-                    b.bind("<Button-1>" , self.square)
-                elif j == 'X³' :
-                    b.bind("<Button-1>" , self.cube)
-                k += 120
-            l += 72
-        
-# ALL FUNCTIONS
+        self.lb2 = Label(self, bg=color2, fg=fg, font='comicsans 35 bold', anchor=W)
+        self.lb2.place(x=3, y=38, width=self.w-6, height=65)
 
-    def show (self , event) :
-        b =  event.widget 
-        self.eq += b['text']
-        self.lb1.config(text = self.eq , anchor = E)
-        self.lb2.config(text = self.eq , anchor = W)
-            
-    def clear(self , event) :
+    def create_buttons(self, color='orange1'):
+        buttons = [
+            ['C', 'CE / ←', '∛', '√'],
+            ['X³', 'X²', '÷', '%'],
+            ['7', '8', '9', '-'],
+            ['4', '5', '6', '+'],
+            ['1', '2', '3', 'x'],
+            ['.', '0', 'ANS', '=']
+        ]
+
+        for r, row in enumerate(buttons):
+            for c, text in enumerate(row):
+                b = Button(self, text=text, font='Vardana 22 bold', activebackground='grey27',
+                           bg=color, relief=RIDGE)
+                b.place(x=c*120+3, y=r*72+110, width=118, height=70)
+
+                # Bind appropriate functions
+                if text not in ['=', 'ANS', 'CE / ←', 'C', '√', '∛', 'X³', 'X²']:
+                    b.bind('<Button-1>', self.enter)
+                elif text == '=':
+                    b.bind('<Button-1>', self.calculate)
+                elif text == 'ANS':
+                    b.bind('<Button-1>', self.use_answer)
+                elif text == 'C':
+                    b.bind("<Button-1>", self.clear_all)
+                elif text == 'CE / ←':
+                    b.bind("<Button-1>", self.backspace)
+                elif text == '√':
+                    b.bind("<Button-1>", self.square_root)
+                elif text == '∛':
+                    b.bind("<Button-1>", self.cube_root)
+                elif text == 'X²':
+                    b.bind("<Button-1>", self.square)
+                elif text == 'X³':
+                    b.bind("<Button-1>", self.cube)
+
+    def enter(self, event):
+        char = event.widget['text'] if event.widget else event.char
+        if char in ['x', '÷']:
+            char = char.replace('x', '*').replace('÷', '/')
+        self.eq += char
+        self.lb2.config(text=self.eq)
+
+    def backspace(self, event):
         self.eq = self.eq[:-1]
-        self.lb2.config(text = self.eq)
+        self.lb2.config(text=self.eq)
 
-    def DEL  (self , event) :
-        self.result = ''
+    def clear_all(self, event):
         self.eq = ''
-        
+        self.result = ''
         self.lb1.config(text=self.eq)
         self.lb2.config(text=self.result)
-    
-    def ANS  (self , event) :
-        self.calc(event)
+
+    def use_answer(self, event):
         self.eq = self.result
-        self.lb1.config(text=self.eq)
         self.lb2.config(text=self.eq)
 
     def square_root(self, event):
         try:
-            eq1  = eval(self.eq.translate(str.maketrans('x÷' , '*/')))
-            self.result = str(round(eq1 ** 0.5,2))
-            self.lb2.config(text=self.result)
-            self.lb1.config(text=f"√{eq1} = {self.result}")
-            self.eq = self.result
+            eq_val = eval(self.eq)
+            self.result = str(round(eq_val ** 0.5, 2))
+            self.update_result(f"√{eq_val} = {self.result}")
         except:
-            self.lb2.config(text="Error!")
-            
+            self.show_error()
+
     def cube_root(self, event):
         try:
-            eq1  = eval(self.eq.translate(str.maketrans('x÷' , '*/')))
-            self.result = str(round(eq1 ** (1/3),2))
-            self.lb2.config(text=self.result)
-            self.lb1.config(text=f"³√{eq1} = {self.result}")
-            self.eq = self.result
+            eq_val = eval(self.eq)
+            self.result = str(round(eq_val ** (1 / 3), 2))
+            self.update_result(f"³√{eq_val} = {self.result}")
         except:
-            self.lb2.config(text="Error!")
-            
+            self.show_error()
+
     def square(self, event):
         try:
-            eq1  = eval(self.eq.translate(str.maketrans('x÷' , '*/')))
-            self.result = str(round(eq1 ** 2,2))
-            self.lb2.config(text=self.result)
-            self.lb1.config(text=f"({eq1}² = {self.result}")
-            self.eq = self.result
+            eq_val = eval(self.eq)
+            self.result = str(round(eq_val ** 2, 2))
+            self.update_result(f"({eq_val})² = {self.result}")
         except:
-            self.lb2.config(text="Error!")
-            
+            self.show_error()
+
     def cube(self, event):
         try:
-            eq1  = eval(self.eq.translate(str.maketrans('x÷' , '*/')))
-            self.result = str(round(eq1 ** 3,2))
-            self.lb2.config(text=self.result)
-            self.lb1.config(text=f"{eq1}³ = {self.result}")
-            self.eq = self.result
+            eq_val = eval(self.eq)
+            self.result = str(round(eq_val ** 3, 2))
+            self.update_result(f"{eq_val}³ = {self.result}")
         except:
-            self.lb2.config(text="Error!")
+            self.show_error()
 
+    
+    def calculate(self, event):
+        try:
+            eq_val = eval(self.eq)
+            self.result = str(eq_val)
+            self.update_result(f"{self.eq} = {self.result}")
+        except ZeroDivisionError:
+            self.show_error("Cannot divide by zero!")
+        except:
+            self.show_error()
 
-    def calc (self , event) :
+    def update_result(self, result_text):
+        self.lb1.config(text=f"Ans : {result_text}")
+        self.lb2.config(text=self.result)
+        self.eq = self.result
 
-        eq1 = self.eq.translate(str.maketrans('x÷' , '*/'))
-        if '%' in eq1 :
-            eq1 = eq1.replace('%' , '*(0.01)*')
+    def show_error(self, message="Error!"):
+        truncated_message = self.truncate_message(message)
+        self.lb2.config(text=truncated_message)
+        self.lb1.config(text="")
 
-        if self.eq != ''  :
-            try : 
-                self.result = f'{eval(eq1)}' 
-                
-                if ( '.' in self.result ) and ( int(self.result[self.result.index('.') + 1 : ]) == 0 ):
-                    self.result = f'{int(eval(self.result))}' 
-                
-                self.lb2.config(text=self.result , anchor = W)
-                self.lb1.config(text = f'Ans  : {self.eq} = '+self.result , anchor = E)
-            except  :
-                self.lb2.config(text='ERROR !')
+    def truncate_message(self, message, max_chars=20):
+        """Truncate the message if it exceeds max characters."""
+        if len(message) > max_chars:
+            return message[:max_chars] + "..."
+        return message
 
-    def Enter(self , event) :
-        self.eq += event.char
-        self.eq  = self.eq.translate(str.maketrans('/X' , '÷x'))
-        self.lb2.config(text = self.eq)
-        
-if __name__ == '__main__' :
+if __name__ == '__main__':
     Calculator = CALCULATOR()
-    Calculator.getDisplay()
-    Calculator.getButtons()
+    Calculator.create_display()
+    Calculator.create_buttons()
     Calculator.mainloop()
 
